@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "Updating system..."
+echo "Updating server..."
 apt update -y
 
 echo "Installing dependencies..."
@@ -8,7 +8,7 @@ apt install -y git gcc make build-essential
 
 cd /opt
 
-echo "Downloading 3proxy source..."
+echo "Downloading 3proxy..."
 git clone https://github.com/3proxy/3proxy.git
 
 cd 3proxy
@@ -17,13 +17,11 @@ echo "Compiling 3proxy..."
 make -f Makefile.Linux
 
 echo "Installing binary..."
-cp src/3proxy /usr/bin/
+cp /opt/3proxy/bin/3proxy /usr/bin/
 chmod +x /usr/bin/3proxy
 
-echo "Creating config folder..."
+echo "Creating config directory..."
 mkdir -p /etc/3proxy
-
-echo "Generating proxy config..."
 
 USER=happy
 PASS=happy
@@ -35,14 +33,11 @@ echo "auth strong" >> /etc/3proxy/3proxy.cfg
 echo "users $USER:CL:$PASS" >> /etc/3proxy/3proxy.cfg
 echo "allow $USER" >> /etc/3proxy/3proxy.cfg
 
-IPS=$(ip -4 addr | grep inet | awk '{print $2}' | cut -d/ -f1 | grep -v 127)
+IP=$(curl -s ifconfig.me)
 
-for IP in $IPS
-do
 echo "proxy -n -a -p$PORT -i$IP -e$IP" >> /etc/3proxy/3proxy.cfg
-echo "$IP:$PORT:$USER:$PASS" >> /root/proxy-list.txt
-PORT=$((PORT+1))
-done
+
+echo "$IP:$PORT:$USER:$PASS" > /root/proxy-list.txt
 
 echo "Creating systemd service..."
 
@@ -65,6 +60,8 @@ systemctl enable 3proxy
 systemctl restart 3proxy
 
 echo ""
-echo "Installation complete!"
-echo "Proxy list saved to:"
-echo "/root/proxy-list.txt"
+echo "================================"
+echo " Proxy Installed Successfully"
+echo "================================"
+echo "Proxy:"
+cat /root/proxy-list.txt
